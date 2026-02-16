@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Markly: Smart Bookmark Manager
 
-## Getting Started
+Markly is a high-performance, real-time bookmark management application built with the latest Next.js 15+ App Router, Supabase, and Tailwind CSS v4. It provides a secure, deterministic environment for users to organize and access their links with instant synchronization across devices.
 
-First, run the development server:
+## 🚀 Technical Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Framework**: [Next.js 15 (App Router)](https://nextjs.org/)
+- **Backend**: [Supabase](https://supabase.com/) (Auth, PostgreSQL, Realtime)
+- **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+- **Components**: [Radix UI](https://www.radix-ui.com/)
+
+## ✨ Key Features
+
+- **Google OAuth Integration**: Secure, industry-standard authentication using Supabase SSR for robust session management.
+- **Real-time Synchronization**: Instant UI updates across multiple tabs/devices via Supabase Realtime (PostgreSQL Changes).
+- **Private Data Isolation**: Strict Row Level Security (RLS) policies ensure user data remains completely private.
+- **Modern Design System**: A deterministic, premium UI built with Tailwind v4's new CSS-first architectural markers.
+- **Server-Side Rendering**: Optimized initial page loads with server-side data fetching.
+
+## 🛠️ Setup Instructions
+
+### 1. Requirements
+Ensure you have [Node.js](https://nodejs.org/) installed on your machine.
+
+### 2. Environment Configuration
+Create a `.env.local` file in the root directory:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Database Schema
+Execute the following SQL in your Supabase SQL Editor:
+```sql
+create table bookmarks (
+  id uuid default gen_random_uuid() primary key,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  title text not null,
+  url text not null,
+  user_id uuid references auth.users(id) not null
+);
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+-- Enable RLS
+alter table bookmarks enable row level security;
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+-- Policies
+create policy "Users can only see their own bookmarks" on bookmarks
+  for select using (auth.uid() = user_id);
 
-## Learn More
+create policy "Users can only insert their own bookmarks" on bookmarks
+  for insert with check (auth.uid() = user_id);
 
-To learn more about Next.js, take a look at the following resources:
+create policy "Users can only delete their own bookmarks" on bookmarks
+  for delete using (auth.uid() = user_id);
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Running the Application
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🧠 Challenges & Solutions
 
-## Deploy on Vercel
+### 1. Robust Server-Side Authentication
+**Challenge**: Ensuring seamless session persistence across both Client and Server components in the Next.js App Router.
+**Solution**: Leveraged `@supabase/ssr` with custom middleware to handle automatic token refreshing and protected route logic at the edge, ensuring a consistent auth state throughout the application.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 2. State Deduplication in Real-time Streams
+**Challenge**: Managing potential race conditions where a manually added bookmark and a real-time event might update the UI simultaneously.
+**Solution**: Implemented a robust ID-based deduplication layer in the client-side state management, ensuring that real-time payloads are only committed if the record doesn't already exist in the local cache.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 3. Modernizing with Tailwind CSS v4
+**Challenge**: Working within the new CSS-first configuration model of Tailwind v4 while maintaining a highly specific design system.
+**Solution**: Utilized the new `@theme` directive to define a deterministic color palette and font system directly in the global CSS, reducing configuration overhead and improving build performance.
+
+### 4. Real-time Latency Optimization
+**Challenge**: Providing instant visual feedback for user actions before the server confirms the database operation.
+**Solution**: Combined manual local state updates with a secondary PostgreSQL subscription fallback, creating an "optimistic-feel" experience while maintaining strict data integrity.
