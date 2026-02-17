@@ -47,7 +47,7 @@ const BookmarkCard = ({ bookmark, onDelete }: Props) => {
             <Button
                 variant="ghost"
                 size="icon"
-                className="ml-2 shrink-0 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                className=""
                 onClick={() => onDelete(bookmark.id)}
             >
                 <Trash2 className="h-4 w-4" />

@@ -70,11 +70,9 @@ npm run dev
 ### 2. State Deduplication in Real-time Streams
 **Challenge**: Managing potential race conditions where a manually added bookmark and a real-time event might update the UI simultaneously.
 **Solution**: Implemented a robust ID-based deduplication layer in the client-side state management, ensuring that real-time payloads are only committed if the record doesn't already exist in the local cache.
+This ensures that even across multiple tabs or simultaneous actions, the UI remains clean and consistent.
 
 ### 3. Modernizing with Tailwind CSS v4
 **Challenge**: Working within the new CSS-first configuration model of Tailwind v4 while maintaining a highly specific design system.
 **Solution**: Utilized the new `@theme` directive to define a deterministic color palette and font system directly in the global CSS, reducing configuration overhead and improving build performance.
 
-### 4. Real-time Latency Optimization
-**Challenge**: Providing instant visual feedback for user actions before the server confirms the database operation.
-**Solution**: Combined manual local state updates with a secondary PostgreSQL subscription fallback, creating an "optimistic-feel" experience while maintaining strict data integrity.
